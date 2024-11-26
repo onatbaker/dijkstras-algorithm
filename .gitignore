@@ -246,6 +246,11 @@ DocProject/Help/*.hhp
 DocProject/Help/Html2
 DocProject/Help/html
 
+# Project files
+*.vcxproj.user
+*.vcxproj.filters
+*.sln
+
 # Click-Once directory
 publish/
 
