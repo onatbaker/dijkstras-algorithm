@@ -24,6 +24,50 @@ std::string findLowestCostNode(const std::unordered_map<std::string, double>& co
 	return lowestCostNode;
 }
 
+void Dijkstra(std::unordered_map<std::string, std::unordered_map<std::string, double>>& graph, std::string& node, std::unordered_map<std::string, double>& costs, std::unordered_map<std::string, std::string>& parents, std::vector<std::string>& processed)
+{
+	while (!node.empty())
+	{
+		double cost = costs[node];
+		const auto& neighbors = graph[node];
+
+		for (const auto& pair : neighbors)
+		{
+			const auto& neighbor = pair.first;
+			double weight = pair.second;
+			double newCost = cost + weight;
+
+			if (costs[neighbor] > newCost)
+			{
+				costs[neighbor] = newCost;
+				parents[neighbor] = node;
+			}
+		}
+		processed.push_back(node);
+		node = findLowestCostNode(costs, processed);
+	}
+}
+
+void printNeighbor(std::unordered_map<std::string, std::unordered_map<std::string, double>>& graph)
+{
+	if (graph.find("start") != graph.end())
+	{
+		for (const auto& neighbor : graph["start"])
+		{
+			std::cout << neighbor.second << " ";
+		}
+	}
+	std::cout << std::endl;
+}
+
+void printWeightOfEdges(std::unordered_map<std::string, std::unordered_map<std::string, double>>& graph)
+{
+	if (graph.find("start") != graph.end() && graph["start"].find("a") != graph["start"].end())
+	{
+		std::cout << "weight of edge from 'start' to 'a' is: " << graph["start"]["a"] << std::endl;
+	}
+}
+
 int main()
 {
 	double inf = std::numeric_limits<double>::infinity();
@@ -52,27 +96,8 @@ int main()
 	parents["fin"] = "";
 
 	std::string node = findLowestCostNode(costs, processed);
-	while (!node.empty())
-	{
-		double cost = costs[node];
-		const auto& neighbors = graph[node];
 
-		for (const auto& pair : neighbors)
-		{
-			const auto& neighbor = pair.first;
-			double weight = pair.second;
-			double newCost = cost + weight;
-
-			if (costs[neighbor] > newCost)
-			{
-				costs[neighbor] = newCost;
-				parents[neighbor] = node;
-			}
-		}
-
-		processed.push_back(node);
-		node = findLowestCostNode(costs, processed);
-	}
+	Dijkstra(graph, node, costs, parents, processed);
 
 	std::cout << "Shortest paths from 'start':" << std::endl;
 
@@ -84,22 +109,6 @@ int main()
 	}
 
 	std::cout << " ----------------------------------------- " << std::endl;
-
-	// get the neighbors of graph
-
-	if (graph.find("start") != graph.end())
-	{
-		for (const auto& neighbor : graph["start"])
-		{
-			std::cout << neighbor.second << " ";
-		}
-	}
-	std::cout << std::endl;
-
-	// get the weight of edges
-
-	if (graph.find("start") != graph.end() && graph["start"].find("a") != graph["start"].end())
-	{
-		std::cout << "weight of edge from 'start' to 'a' is: " << graph["start"]["a"] << std::endl;
-	}
+	printNeighbor(graph);
+	printWeightOfEdges(graph);
 }
