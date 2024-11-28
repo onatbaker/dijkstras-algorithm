@@ -4,7 +4,37 @@
 #include <limits>
 #include <algorithm>
 
-std::string findLowestCostNode(const std::unordered_map<std::string, double>& costs, const std::vector<std::string>& processed)
+struct Graph
+{
+	std::unordered_map<std::string, std::unordered_map<std::string, double>> graph;
+	std::unordered_map<std::string, double> costs;
+	std::unordered_map<std::string, std::string> parents;
+};
+
+static Graph makeGraph(Graph graph)
+{
+	double inf = std::numeric_limits<double>::infinity();
+
+	graph.graph["start"]["a"] = 6;
+	graph.graph["start"]["b"] = 2;
+
+	graph.graph["a"]["fin"] = 1;
+
+	graph.graph["b"]["a"] = 3;
+	graph.graph["b"]["fin"] = 5;
+
+	graph.costs["a"] = 6;
+	graph.costs["b"] = 2;
+	graph.costs["fin"] = inf;
+
+	graph.parents["a"] = "start";
+	graph.parents["b"] = "start";
+	graph.parents["fin"] = "";
+
+	return graph;
+}
+
+std::string findLowestCostNode(std::unordered_map<std::string, double>& costs, const std::vector<std::string>& processed)
 {
 	double lowestCost = std::numeric_limits<double>::infinity();
 	std::string lowestCostNode;
@@ -24,12 +54,14 @@ std::string findLowestCostNode(const std::unordered_map<std::string, double>& co
 	return lowestCostNode;
 }
 
-void Dijkstra(std::unordered_map<std::string, std::unordered_map<std::string, double>>& graph, std::string& node, std::unordered_map<std::string, double>& costs, std::unordered_map<std::string, std::string>& parents, std::vector<std::string>& processed)
+void Dijkstra(Graph& graph)
 {
+	std::vector<std::string> processed;
+	std::string node = findLowestCostNode(graph.costs, processed);
 	while (!node.empty())
 	{
-		double cost = costs[node];
-		const auto& neighbors = graph[node];
+		double cost = graph.costs[node];
+		const auto& neighbors = graph.graph[node];
 
 		for (const auto& pair : neighbors)
 		{
@@ -37,22 +69,22 @@ void Dijkstra(std::unordered_map<std::string, std::unordered_map<std::string, do
 			double weight = pair.second;
 			double newCost = cost + weight;
 
-			if (costs[neighbor] > newCost)
+			if (graph.costs[neighbor] > newCost)
 			{
-				costs[neighbor] = newCost;
-				parents[neighbor] = node;
+				graph.costs[neighbor] = newCost;
+				graph.parents[neighbor] = node;
 			}
 		}
 		processed.push_back(node);
-		node = findLowestCostNode(costs, processed);
+		node = findLowestCostNode(graph.costs, processed);
 	}
 }
 
-void printNeighbor(std::unordered_map<std::string, std::unordered_map<std::string, double>>& graph)
+void printNeighbor(Graph& graph)
 {
-	if (graph.find("start") != graph.end())
+	if (graph.graph.find("start") != graph.graph.end())
 	{
-		for (const auto& neighbor : graph["start"])
+		for (const auto& neighbor : graph.graph["start"])
 		{
 			std::cout << neighbor.second << " ";
 		}
@@ -60,48 +92,28 @@ void printNeighbor(std::unordered_map<std::string, std::unordered_map<std::strin
 	std::cout << std::endl;
 }
 
-void printWeightOfEdges(std::unordered_map<std::string, std::unordered_map<std::string, double>>& graph)
+void printWeightOfEdges(Graph& graph)
 {
-	if (graph.find("start") != graph.end() && graph["start"].find("a") != graph["start"].end())
+	if (graph.graph.find("start") != graph.graph.end() && graph.graph["start"].find("a") != graph.graph["start"].end())
 	{
-		std::cout << "weight of edge from 'start' to 'a' is: " << graph["start"]["a"] << std::endl;
+		std::cout << "weight of edge from 'start' to 'a' is: " << graph.graph["start"]["a"] << std::endl;
 	}
 }
 
 int main()
 {
-	double inf = std::numeric_limits<double>::infinity();
+	Graph graph;
+	Graph graphObject = makeGraph(graph);
 
-	std::unordered_map<std::string, std::unordered_map<std::string, double>> graph;
-	std::unordered_map<std::string, double> costs;
-	std::unordered_map<std::string, std::string> parents;
 	std::vector<std::string> processed;
 
-	graph["start"]["a"] = 6;
-	graph["start"]["b"] = 2;
+	std::string node = findLowestCostNode(graphObject.costs, processed);
 
-	graph["a"]["fin"] = 1;
-
-	graph["b"]["a"] = 3;
-	graph["b"]["fin"] = 5;
-
-	graph["fin"] = {};
-
-	costs["a"] = 6;
-	costs["b"] = 2;
-	costs["fin"] = inf;
-
-	parents["a"] = "start";
-	parents["b"] = "start";
-	parents["fin"] = "";
-
-	std::string node = findLowestCostNode(costs, processed);
-
-	Dijkstra(graph, node, costs, parents, processed);
+	Dijkstra(graphObject);
 
 	std::cout << "Shortest paths from 'start':" << std::endl;
 
-	for (const auto& pair : costs)
+	for (const auto& pair : graphObject.costs)
 	{
 		const auto& node = pair.first;
 		const auto& cost = pair.second;
@@ -109,6 +121,6 @@ int main()
 	}
 
 	std::cout << " ----------------------------------------- " << std::endl;
-	printNeighbor(graph);
-	printWeightOfEdges(graph);
+	printNeighbor(graphObject);
+	printWeightOfEdges(graphObject);
 }
